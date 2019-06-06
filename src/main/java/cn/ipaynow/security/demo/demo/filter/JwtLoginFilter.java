@@ -25,11 +25,11 @@ import java.util.Date;
  * @author liuzhihang
  * @date 2019-06-03 19:32
  */
-public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
+public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private AuthenticationManager authenticationManager;
 
-    public JWTLoginFilter(AuthenticationManager authenticationManager) {
+    public JwtLoginFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
     }
 

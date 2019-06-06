@@ -1,7 +1,6 @@
 package cn.ipaynow.security.demo.demo.service;
 
-import cn.ipaynow.security.demo.demo.filter.JWTAuthenticationFilter;
-import cn.ipaynow.security.demo.demo.filter.JWTLoginFilter;
+import cn.ipaynow.security.demo.demo.filter.JwtPerTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -11,9 +10,11 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import javax.annotation.Resource;
@@ -31,13 +32,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Resource(name = "logoutSuccessHandlerImpl")
     private LogoutSuccessHandler logoutSuccessHandler;
 
+    @Resource(name = "authenticationEntryPointImpl")
+    private AuthenticationEntryPoint authenticationEntryPoint;
+
     @Resource(name = "authenticationSuccessHandlerImpl")
     private AuthenticationSuccessHandler authenticationSuccessHandler;
 
     @Resource(name = "authenticationFailureHandlerImpl")
     private AuthenticationFailureHandler authenticationFailureHandler;
+
     @Resource(name = "accessDeniedHandlerImpl")
     private AccessDeniedHandler accessDeniedHandler;
+
+    @Resource
+    private JwtPerTokenFilter jwtPerTokenFilter;
+
     /**
      * 配置用户信息
      *
@@ -65,6 +74,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // 使用JWT, 关闭session
                 .csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
+                .and().httpBasic().authenticationEntryPoint(authenticationEntryPoint)
+
                 // 登录的权限, 成功返回信息, 失败返回信息
                 .and()
                 .formLogin().permitAll()
@@ -79,7 +90,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // 配置url 权限 antMatchers: 匹配url 权限
                 .and()
                 .authorizeRequests()
-                .antMatchers("/login","/toHome", "/toUser").permitAll()
+                .antMatchers("/login", "/toHome", "/toUser").permitAll()
                 .antMatchers("/toAdmin").hasRole("ADMIN")
                 .antMatchers("/toEmployee").access("hasRole('ADMIN') or hasRole('EMPLOYEE')")
                 // 其他需要登录才能访问
@@ -94,8 +105,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 // 自定义过滤
                 .and()
-                .addFilter(new JWTLoginFilter(authenticationManager())).addFilter(new JWTAuthenticationFilter(authenticationManager()));
+                .addFilterBefore(jwtPerTokenFilter, UsernamePasswordAuthenticationFilter.class).headers().cacheControl();
+        // .addFilter(new JwtLoginFilter(authenticationManager())).addFilter(new JwtAuthenticationFilter(authenticationManager()));
     }
+
     /**
      * 密码加密器
      */

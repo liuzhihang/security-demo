@@ -17,9 +17,9 @@ import java.util.ArrayList;
  * @author liuzhihang
  * @date 2019-06-03 19:51
  */
-public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
+public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
-    public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
     }
 
